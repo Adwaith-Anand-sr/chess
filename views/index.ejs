@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+   <meta name="color-scheme" content="light dark">
+   <title>Chess Room</title>
+   <script src="https://cdn.tailwindcss.com"></script>
+   <link href="./stylesheets/style.css" rel="stylesheet">
+</head>
+<body>
+   <main class="w-full overflow-hidden h-screen bg-zinc-900 flex items-center justify-center">
+      <div id="board" class="text-[1.85rem] w-[95vw] h-[95vw] border border-white"></div>
+   
+      <div id="player2" class="fixed top-[10%] left-[5%]"><span class="border ml-[5vw] py-[1vh] rounded-lg px-[6vw]">Player2</span></span>
+      <div id="player1" class="fixed top-[90%] left-[50%]"><span class="border ml-[70%] py-[1vh] rounded-lg px-[6vw]">Player1</span></div>
+
+   </main>
+   
+   <div id="joinRoom" class="fixed z-30 top-[50vh] left-1/2 -translate-x-1/2">
+      <input id="name" type="text" required="">
+      <input id="roomId" type="number" required="">
+      <button onclick="joinRoom()" class="border py-[1vh] px-[5.8vw] rounded-lg">Join</button>
+   </div>
+   
+
+   
+   <script src="/socket.io/socket.io.js"></script> 
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js" integrity="sha512-xRllwz2gdZciIB+AkEbeq+gVhX8VB8XsfqeFbUh+SzHlN96dEduwtTuVuc2u9EROlmW9+yhRlxjif66ORpsgVA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+   <script src="./javascripts/script.js"></script>
+</body>
+</html>
