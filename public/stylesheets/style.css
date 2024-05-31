@@ -4,6 +4,7 @@
    display: grid;
    grid-template-columns: repeat(8, 1fr);
    grid-template-rows: repeat(8, 1fr);
+   
 }
 
 .white {
@@ -12,6 +13,17 @@
 .black {
    background-color: #b58763;
 }
+.white:hover{
+   box-shadow: inset 0 0 12px green;
+}
+.black:hover{
+   box-shadow: inset 0 0 12px green;
+}
+   
+.sourceSelected{
+   box-shadow: inset 0 0 12px green;
+}
+
 @media (prefers-color-scheme: dark) {
    .white {
       background-color: #f0dab5 !important;

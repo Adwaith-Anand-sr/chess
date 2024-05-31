@@ -59,22 +59,16 @@ io.on("connection", (socket)=>{
          console.log(result);
          if (result) {
             currentPlayer = chess.turn()
-            console.log(player.roomId);
             io.to(`${player.roomId}`).emit("move", move)
             io.to(`${player.roomId}`).emit("boardState", chess.fen())
-            // io.emit("move", move)
-            // io.emit("boardState", chess.fen())
-            console.log(currentPlayer);
+            console.log("currentPlayer : ", currentPlayer);
          }else{
             console.log("invalid move :: ", move);
          }
       } catch (e) {
          console.log("invalid Move ", e);
       }
-      
    })
-   
-   
    
    socket.on("disconnecting", async () => {
 

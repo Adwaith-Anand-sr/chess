@@ -4,10 +4,19 @@ const chess = new Chess();
 let playerRole  = null;
 let click = 0;
 let source, target;
+
 function joinRoom() {
    let roomId = document.querySelector("#joinRoom #roomId").value
    let usr = document.querySelector("#joinRoom #name").value
-   socket.emit("joinRoom", roomId, usr)
+   
+   if (roomId.length >2 && usr.length >2) {
+      socket.emit("joinRoom", roomId, usr)
+      document.getElementById("loader").style.display = "flex"
+      document.getElementById("joinRoom").style.display = "none"
+      document.querySelector("#player1 span").textContent = usr
+      document.querySelector("#roomId input").value = roomId
+   }
+   else document.getElementById("errorJoin").value = "*playername and roomId require atleast 3 charecters."
 }
 
 function setupBoard() {
@@ -37,16 +46,34 @@ function setupBoard() {
       });
    });
    handleClickEvents()
+   document.getElementById("loader").style.display = "none"
 }
 
 function handleClickEvents() {
-
    let squareElem = document.querySelectorAll(".square")
    squareElem.forEach((item)=>{
-      item.addEventListener("click", ()=>{
+      item.addEventListener("click", (e)=>{
+      
          (click < 2) ? click++ : click = 0
          if (click === 1){
+            if (item.innerHTML === "") {
+               click = 0 
+               return
+            }
             source = item;
+            let possibleMoves = chess.moves({ square: `${String.fromCharCode(97+parseInt(source.dataset.col))}${8- source.dataset.row}` })
+            
+            let extractedMoves = []
+            possibleMoves.forEach(move => {
+               if (move.length >2) {
+                  extractedMoves.push(move.slice(1))
+               }else extractedMoves.push(move)
+            })
+            extractedMoves.forEach(move =>{
+               move.map(elem => alert(elem))
+               const targetElem = document.querySelector(`div[data-col="f"][data-row="3"]`);
+            })
+
          }
          else if (click === 2){
             target = item;
@@ -56,8 +83,8 @@ function handleClickEvents() {
          
       });
    })
-   
 }
+
 
 function handleMove(source, target) {
    let move = {
