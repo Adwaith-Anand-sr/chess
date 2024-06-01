@@ -1,9 +1,11 @@
+
 const socket = io();
 const chess = new Chess();
 
 let playerRole  = null;
-let click = 0;
+let click = 1;
 let source, target;
+
 
 function joinRoom() {
    let roomId = document.querySelector("#joinRoom #roomId").value
@@ -53,38 +55,44 @@ function handleClickEvents() {
    let squareElem = document.querySelectorAll(".square")
    squareElem.forEach((item)=>{
       item.addEventListener("click", (e)=>{
-      
-         (click < 2) ? click++ : click = 0
+         let innerItem = item.querySelector("div")
+         let cls = (playerRole === "w") ? "text-white" : "text-black"
          if (click === 1){
-            if (item.innerHTML === "") {
+            if (item.innerHTML === "" || playerRole != chess.turn() || !innerItem.classList.contains(`${cls}`)) {
                click = 0 
                return
             }
+            click = 2; 
+            item.classList.add("sourceSelected")
             source = item;
             let possibleMoves = chess.moves({ square: `${String.fromCharCode(97+parseInt(source.dataset.col))}${8- source.dataset.row}` })
-            
             let extractedMoves = []
             possibleMoves.forEach(move => {
-               if (move.length >2) {
+               if (move.length === 3) {
                   extractedMoves.push(move.slice(1))
-               }else extractedMoves.push(move)
+               }else if (move.length === 2) {
+                  extractedMoves.push(move)
+               }else return
             })
             extractedMoves.forEach(move =>{
-               move.map(elem => alert(elem))
-               const targetElem = document.querySelector(`div[data-col="f"][data-row="3"]`);
+               let col = move.charAt(0); 
+               col = col.charCodeAt(0) - 97
+               const row = 8 - move.charAt(1); 
+               const targetElem = document.querySelector(`.square[data-row="${row}"][data-col="${col}"]`);
+               targetElem.classList.add("targetSelected")
             })
-
          }
          else if (click === 2){
+            if (innerItem != null && innerItem.classList.contains(`${cls}`)) {
+               return
+            }
             target = item;
-            click= 0;
+            click= 1;
             handleMove(source, target)
          }
-         
       });
    })
 }
-
 
 function handleMove(source, target) {
    let move = {
@@ -94,28 +102,6 @@ function handleMove(source, target) {
    }
    socket.emit("move", move)
 }
-
-socket.on("joined", (dets)=>{
-   playerRole = dets.role 
-   setupBoard()
-})
-
-socket.on("role", (roleW, roleB)=>{
-   let player1 = document.querySelector("#player1 span");
-   let player2 = document.querySelector("#player2 span");
-   player1.textContent = roleW.name
-   player2.textContent = roleB.name
-});
-
-socket.on("boardState", (fen)=>{
-   chess.load(fen)
-   setupBoard()
-})
-
-socket.on("move", (move)=>{
-   chess.move(move)
-   setupBoard()
-})
 
 function getUnicode(item) {
    const ITEMS =[
@@ -193,3 +179,39 @@ function getUnicode(item) {
    }
    return result;
 }
+
+socket.on("joined", (dets)=>{
+   playerRole = dets.role 
+   setupBoard()
+})
+
+socket.on("role", (roleW, roleB)=>{
+   let player1 = document.querySelector("#player1 span");
+   let player2 = document.querySelector("#player2 span");
+   player1.textContent = roleW.name
+   player2.textContent = roleB.name
+});
+
+socket.on("boardState", (fen)=>{
+   chess.load(fen)
+   setupBoard()
+})
+
+socket.on("move", (move)=>{
+   chess.move(move)
+   setupBoard()
+})
+
+socket.on("check", ()=>{
+   let board = chess.board()
+   board.forEach((row, i)=>{
+      row.forEach((col, j)=>{
+         if (col && col.type === 'k' && col.color === chess.turn()) {
+            const targetElem = document.querySelector(`.square[data-row="${(i)}"][data-col="${j}"]`);
+            targetElem.classList.add("check")
+         }
+         
+      })
+   })
+
+})

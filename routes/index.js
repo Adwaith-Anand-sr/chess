@@ -12,8 +12,8 @@ let currentPlayer
 let games = {}; 
 
 io.on("connection", (socket)=>{
-   socket.on("chess", (chess)=>{
-      console.log(chess, "\n");
+   socket.on("chess", (c)=>{
+      console.log(c);
    });
    
    socket.on("joinRoom", async (roomId, name)=>{
@@ -43,16 +43,14 @@ io.on("connection", (socket)=>{
       if (!games[roomId]) {
         games[roomId] = new Chess(); // Initialize a new chess game for the room
       }
-      console.log(games);
+
       let roleW= await playerModel.findOne({roomId, role: "w"})
       let roleB = await playerModel.findOne({roomId, role: "b"})
       socket.emit("joined", player)
       if(roleW && roleB) io.to(`${player.roomId}`).emit("role", roleW, roleB)
-      
    });
    
    socket.on("move", async(move)=>{
-      console.log("yeye");
       let player =  await playerModel.findOne({id: socket.id}) 
       if (!player) {
         console.error("error", "Player not found.");
@@ -63,16 +61,21 @@ io.on("connection", (socket)=>{
         console.error("error", "Game not found.");
         return;
       }
-
       if (chess.turn() === "w" && player.role != "w") return
       if (chess.turn() === "b" && player.role != "b") return
-      console.log("yoyo");
       try {
          let result = chess.move(move)
-         console.log(result);
          if (result) {
+            io.to(`${player.roomId}`).emit("turn", chess.turn())
             io.to(`${player.roomId}`).emit("move", move)
             io.to(`${player.roomId}`).emit("boardState", chess.fen())
+            if (chess.isCheckmate()) {
+               io.to(`${player.roomId}`).emit("checkmate")
+               return
+            }
+            if (chess.inCheck()) {
+               io.to(`${player.roomId}`).emit("check")
+            }
          }else{
             console.log("invalid move :: ", move);
          }
@@ -80,6 +83,8 @@ io.on("connection", (socket)=>{
          console.log("An error occurred while processing the move\n ", e);
       }
    })
+   
+   
    
    socket.on("disconnecting", async () => {
       try{

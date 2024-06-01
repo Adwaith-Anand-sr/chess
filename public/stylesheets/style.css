@@ -13,15 +13,21 @@
 .black {
    background-color: #b58763;
 }
-.white:hover{
+/* .white:hover{
    box-shadow: inset 0 0 12px green;
 }
 .black:hover{
    box-shadow: inset 0 0 12px green;
 }
-   
+ */
 .sourceSelected{
    box-shadow: inset 0 0 12px green;
+}
+.targetSelected{
+   box-shadow: inset 0 0 12px orange;
+}
+.check{
+   box-shadow: inset 0 0 12px red;
 }
 
 @media (prefers-color-scheme: dark) {
