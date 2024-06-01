@@ -215,3 +215,18 @@ socket.on("check", ()=>{
    })
 
 })
+
+socket.on("checkmate", ()=>{
+   alert("checkMate*")
+   let board = chess.board()
+   board.forEach((row, i)=>{
+      row.forEach((col, j)=>{
+         if (col && col.type === 'k' && col.color === chess.turn()) {
+            const targetElem = document.querySelector(`.square[data-row="${(i)}"][data-col="${j}"]`);
+            targetElem.classList.add("check")
+         }
+         
+      })
+   })
+
+})
