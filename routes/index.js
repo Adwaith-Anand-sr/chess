@@ -7,10 +7,9 @@ const mongodbConfig = require("../config/mongodbConfig");
 const groupModel = require("../models/groups");
 const playerModel = require("../models/players");
 
-let players =[];
-let currentPlayer
-const chess = new Chess()
 
+let currentPlayer
+let games = {}; 
 
 io.on("connection", (socket)=>{
    socket.on("chess", (chess)=>{
@@ -41,6 +40,10 @@ io.on("connection", (socket)=>{
          roomId,
          role
       })
+      if (!games[roomId]) {
+        games[roomId] = new Chess(); // Initialize a new chess game for the room
+      }
+      console.log(games);
       let roleW= await playerModel.findOne({roomId, role: "w"})
       let roleB = await playerModel.findOne({roomId, role: "b"})
       socket.emit("joined", player)
@@ -51,6 +54,16 @@ io.on("connection", (socket)=>{
    socket.on("move", async(move)=>{
       console.log("yeye");
       let player =  await playerModel.findOne({id: socket.id}) 
+      if (!player) {
+        console.error("error", "Player not found.");
+        return;
+      }
+      let chess = games[player.roomId]; // Retrieve the correct chess instance for the room
+      if (!chess) {
+        console.error("error", "Game not found.");
+        return;
+      }
+
       if (chess.turn() === "w" && player.role != "w") return
       if (chess.turn() === "b" && player.role != "b") return
       console.log("yoyo");
@@ -58,39 +71,44 @@ io.on("connection", (socket)=>{
          let result = chess.move(move)
          console.log(result);
          if (result) {
-            currentPlayer = chess.turn()
             io.to(`${player.roomId}`).emit("move", move)
             io.to(`${player.roomId}`).emit("boardState", chess.fen())
-            console.log("currentPlayer : ", currentPlayer);
          }else{
             console.log("invalid move :: ", move);
          }
       } catch (e) {
-         console.log("invalid Move ", e);
+         console.log("An error occurred while processing the move\n ", e);
       }
    })
    
    socket.on("disconnecting", async () => {
-
-      let player = await playerModel.findOne({id: socket.id})
-      if (player) {
-         let group = await groupModel.findOne({roomId: player.roomId})
-         for (let i = 0; i < group.members.length; i++) {
-             if (group.members[i] === player.id) {
-                 group.members.splice(i, 1);
-                 await group.save();
-                 console.log("done");
-                 break;
-             }
+      try{
+         let player = await playerModel.findOne({id: socket.id})
+         if (player) {
+            let group = await groupModel.findOne({roomId: player.roomId})
+            if (group) {
+               // for (let i = 0; i < group.members.length; i++) {
+               //     if (group.members[i] === player.id) {
+               //        group.members.splice(i, 1);
+               //        await group.save();
+               //        console.log("done");
+               //        break;
+               //     }
+               // }
+               group.members = group.members.filter(memberId => memberId !== player.id);
+               await group.save();
+               if (group.members.length === 0) {
+                  delete games[player.roomId]; // Remove the game state when all players leave the room
+                  await groupModel.deleteOne({ roomId: player.roomId });
+               }
+            }
+            
+            await playerModel.deleteOne({id: socket.id});
          }
-         if (group.members.length === 0) {
-            await groupModel.deleteOne({roomId: player.roomId});
-         }
-         await playerModel.deleteOne({id: socket.id});
       }
-      
-      
-     
+      catch(error){
+         console.error("Error during disconnection:", error);
+      }
    });
 });
 
